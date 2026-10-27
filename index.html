@@ -149,6 +149,12 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;animation:toast 2.2s ease forwards}
 @keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:25;width:100%;height:100%}
+/* reorder by long-press and drag */
+.task{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.task.dragging{position:relative;z-index:8;transition:none;box-shadow:0 12px 28px rgba(0,0,0,.18);border-color:var(--accent)}
+.task.dragging .box{animation:none}
+body.reordering{-webkit-user-select:none;user-select:none;cursor:grabbing}
+.hint{font-size:.8rem;color:var(--muted);text-align:center;margin:4px 0 0}
 /* yesterday / today switch */
 .dayswitch{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin:2px 0 12px}
 .dayswitch button{flex:1;border:0;background:none;border-radius:9px;padding:8px;font-weight:700;color:var(--muted);display:flex;gap:6px;justify-content:center;align-items:center}
@@ -421,9 +427,9 @@ const T=target(t);
 if(T>1){
 const c=countOf(t),water=/wod[aęy]|water|szklan/i.test(t.title);
 const g=[];for(let i=0;i<T;i++)g.push(`<button type="button" class="glass${i<c?" on":""}" data-glass="${t.id}" data-i="${i}" aria-label="${water?"Szklanka":"Raz"} ${i+1} z ${T}" aria-pressed="${i<c}">${water?GLASS:DOT}</button>`);
-return `<div class="task counter${d?" done":""}"><span class="box" aria-hidden="true">${CHECK}</span><span class="t"><span class="t-name">${esc(t.title)}</span> <span class="cnttxt num">${c}/${T}</span>${sub}<span class="glasses">${g.join("")}</span></span><span class="p num">+${fmt(pts)}</span></div>`;
+return `<div class="task counter${d?" done":""}" data-id="${t.id}"><span class="box" aria-hidden="true">${CHECK}</span><span class="t"><span class="t-name">${esc(t.title)}</span> <span class="cnttxt num">${c}/${T}</span>${sub}<span class="glasses">${g.join("")}</span></span><span class="p num">+${fmt(pts)}</span></div>`;
 }
-return `<button class="task${d?" done":""}" data-toggle="${t.id}" aria-pressed="${d}"><span class="box">${CHECK}</span><span class="t"><span class="t-name">${esc(t.title)}</span>${sub}</span><span class="p num">+${fmt(pts)}</span></button>`;
+return `<button class="task${d?" done":""}" data-id="${t.id}" data-toggle="${t.id}" aria-pressed="${d}"><span class="box">${CHECK}</span><span class="t"><span class="t-name">${esc(t.title)}</span>${sub}</span><span class="p num">+${fmt(pts)}</span></button>`;
 }
 function leftOn(d){return dailyTasks().filter(t=>!isDoneOn(t,d)).length}
 function renderTasks(popId){
@@ -455,6 +461,7 @@ h+=`</section>`;continue;
 const dn2=list.filter(isDone).length;
 h+=`<section class="group"><div class="ghead"><h2>${title}</h2><span>${type==="daily"||!same?"":periodHint(type)+" · "}${dn2}/${list.length}</span></div><div class="list">${list.map(taskBtn).join("")||'<div class="empty">Brak zadań dziennych</div>'}</div></section>`;
 }
+if(S.tasks.length>1)h+=`<p class="hint">Przytrzymaj zadanie i przesuń, żeby zmienić kolejność</p>`;
 $("#view").innerHTML=h;
 if(popId){const el=document.querySelector(`[data-toggle="${popId}"]`);if(el)el.classList.add("pop")}
 }
@@ -635,6 +642,53 @@ let lastDay=ymd(new Date());
 function dayCheck(){const d=ymd(new Date());if(d!==lastDay){lastDay=d;viewOffset=0;if(!$("#sheetRoot").innerHTML)render()}}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)dayCheck()});
 setInterval(dayCheck,60000);
+/* ---------- reorder: long-press a task, then drag it within its list ---------- */
+let lp=null,drag=null,suppressClick=false;
+const view=$("#view");
+function lpStart(target,x,y){
+if(tab!=="tasks"||drag)return;
+const el=target.closest(".task");if(!el||!el.dataset.id)return;
+lp={el,x,y,timer:setTimeout(()=>{const l=lp;lp=null;if(l)dragStart(l.el,y)},450)};
+}
+function lpCancel(){if(lp){clearTimeout(lp.timer);lp=null}}
+function dragStart(el,y){
+drag={el,list:el.parentElement,anchor:y+scrollY-el.offsetTop,lastY:y};
+el.classList.add("dragging");document.body.classList.add("reordering");
+try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}
+}
+function dragMove(y){
+const {el,list}=drag;drag.lastY=y;
+const sib=[...list.children].filter(c=>c.classList.contains("task"));
+const pos=()=>y+scrollY-drag.anchor;
+let i=sib.indexOf(el);
+while(i>0){const p=sib[i-1];if(pos()<p.offsetTop+p.offsetHeight/2){list.insertBefore(el,p);sib.splice(i,1);sib.splice(i-1,0,el);i--}else break}
+while(i<sib.length-1){const n=sib[i+1];if(pos()+el.offsetHeight>n.offsetTop+n.offsetHeight/2){list.insertBefore(n,el);sib.splice(i+1,1);sib.splice(i,0,n);i++}else break}
+el.style.transform="translateY("+(pos()-el.offsetTop)+"px)";
+if(y<90)scrollBy(0,-10);else if(y>innerHeight-150)scrollBy(0,10);
+}
+function dragEnd(){
+if(!drag)return;
+const {el,list}=drag;drag=null;
+el.style.transform="";el.classList.remove("dragging");document.body.classList.remove("reordering");
+suppressClick=true;setTimeout(()=>{suppressClick=false},400);
+const ids=[...list.children].filter(c=>c.dataset&&c.dataset.id).map(c=>c.dataset.id);
+const slots=ids.map(id=>S.tasks.findIndex(t=>t.id===id)).filter(i=>i>=0).sort((a,b)=>a-b);
+const byId=Object.fromEntries(S.tasks.map(t=>[t.id,t]));
+const before=S.tasks.map(t=>t.id).join();
+slots.forEach((slot,k)=>{S.tasks[slot]=byId[ids[k]]});
+if(S.tasks.map(t=>t.id).join()!==before)persist();
+}
+view.addEventListener("touchstart",e=>{if(e.touches.length===1)lpStart(e.target,e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+view.addEventListener("mousedown",e=>{if(e.button===0)lpStart(e.target,e.clientX,e.clientY)});
+function onMove(x,y,e){
+if(lp){if(Math.abs(x-lp.x)>8||Math.abs(y-lp.y)>8)lpCancel();return}
+if(drag){if(e.cancelable)e.preventDefault();dragMove(y)}
+}
+document.addEventListener("touchmove",e=>{const t=e.touches[0];if(t)onMove(t.clientX,t.clientY,e)},{passive:false});
+document.addEventListener("mousemove",e=>onMove(e.clientX,e.clientY,e));
+for(const ev of ["touchend","touchcancel","mouseup"])document.addEventListener(ev,()=>{lpCancel();dragEnd()});
+view.addEventListener("contextmenu",e=>{if(e.target.closest(".task"))e.preventDefault()});
+view.addEventListener("click",e=>{if(suppressClick){e.stopPropagation();e.preventDefault();suppressClick=false}},true);
 /* ---------- installable app ---------- */
 let installEvt=null;
 const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;

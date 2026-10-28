@@ -1,6 +1,6 @@
 // Motywator — działa też bez internetu. Zmień wersję przy każdej aktualizacji aplikacji.
-const CACHE = "motywator-v3";
-const CORE = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "icon-180.png"];
+const CACHE = "motywator-v4";
+const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-180.png", "favicon.ico"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

@@ -11,6 +11,10 @@ Prosta aplikacja do odhaczania zadań: za każde zadanie dostajesz punkty, a pun
 
 ## Instalacja
 
+- **Android — aplikacja (APK):** na telefonie otwórz [najnowszą wersję](https://github.com/aipiotrlipinski/motywator/releases/latest/download/motywator.apk), pobierz plik i stuknij go. Za pierwszym razem telefon zapyta o zgodę na instalację z tego źródła — zezwól. Nowa wersja instaluje się na starą i dane zostają.
+
+Albo jako aplikacja z przeglądarki:
+
 Otwórz stronę aplikacji (GitHub Pages) i:
 
 - **Komputer (Chrome / Edge):** kliknij ikonkę „Zainstaluj” na końcu paska adresu albo Ustawienia → Zainstaluj. Motywator dostanie własną ikonkę w menu Start / na pulpicie i otworzy się w osobnym oknie.

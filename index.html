@@ -521,7 +521,7 @@ $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role
 $("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeSheet()});
 $("#exClose").onclick=closeSheet;
 $("#exCopy").onclick=async()=>{const ta=$("#exTxt");try{await navigator.clipboard.writeText(json);toast("Skopiowano")}catch(e){ta.focus();ta.select();try{document.execCommand("copy");toast("Skopiowano")}catch(_){toast("Zaznacz tekst i skopiuj ręcznie")}}};
-if($("#exFile"))$("#exFile").onclick=()=>{try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));a.download="motywator-"+ymd(new Date())+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}catch(e){toast("Nie udało się pobrać — użyj Kopiuj")}};
+if($("#exFile"))$("#exFile").onclick=()=>{if(window.MotywatorAndroid){let ok=false;try{ok=window.MotywatorAndroid.saveFile("motywator-"+ymd(new Date())+".json",json)}catch(e){}toast(ok?"Zapisano w Pobranych":"Nie udało się zapisać — użyj Kopiuj");return}try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));a.download="motywator-"+ymd(new Date())+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}catch(e){toast("Nie udało się pobrać — użyj Kopiuj")}};
 }
 function openImportSheet(){
 $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="imf" role="dialog" aria-modal="true" aria-labelledby="imh">
@@ -691,10 +691,10 @@ view.addEventListener("contextmenu",e=>{if(e.target.closest(".task"))e.preventDe
 view.addEventListener("click",e=>{if(suppressClick){e.stopPropagation();e.preventDefault();suppressClick=false}},true);
 /* ---------- installable app ---------- */
 let installEvt=null;
-const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const isStandalone=()=>!!window.MotywatorAndroid||window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(tab==="settings")render()});
 window.addEventListener("appinstalled",()=>{installEvt=null;toast("Zainstalowano Motywatora");if(tab==="settings")render()});
-if("serviceWorker" in navigator&&!window.claude&&(location.protocol==="https:"||location.hostname==="localhost")){
+if("serviceWorker" in navigator&&!window.claude&&!window.MotywatorAndroid&&(location.protocol==="https:"||location.hostname==="localhost")){
 navigator.serviceWorker.register("sw.js").catch(()=>{});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 }

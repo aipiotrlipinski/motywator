@@ -1,0 +1,49 @@
+plugins {
+    id "com.android.application"
+}
+
+// Numer wersji rośnie z każdym buildem na GitHubie, więc nowa APK instaluje się „na” starą i dane zostają.
+def buildNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace "pl.motywator.app"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "pl.motywator.app"
+        minSdk 26
+        targetSdk 34
+        versionCode buildNumber
+        versionName "1." + buildNumber
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("../motywator.keystore")
+            storePassword "motywator"
+            keyAlias "motywator"
+            keyPassword "motywator"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.webkit:webkit:1.12.1"
+}

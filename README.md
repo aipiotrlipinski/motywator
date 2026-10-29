@@ -4,8 +4,9 @@ Prosta aplikacja do odhaczania zadań: za każde zadanie dostajesz punkty, a pun
 
 - zadania codzienne, tygodniowe, miesięczne, roczne i jednorazowe
 - serie dni z rzędu (co 7. dzień podwójne punkty) i premia za cały dzień
-- odhaczanie za wczoraj (przełącznik „Wczoraj / Dziś”)
-- zadania z licznikiem, np. 6 szklanek wody — ostatnia odhacza zadanie
+- kilka osób (np. Ty i druga osoba) — każda ma własne zadania, punkty i nagrody
+- odhaczanie zaległych dni do tygodnia wstecz — przesuń palcem w prawo
+- rodzaj zadania: do odhaczenia, szklanki (np. 6 szklanek wody) albo kółka — ostatnie odhacza zadanie
 - jasny i ciemny motyw, dźwięki, konfetti
 - działa bez internetu, dane zostają na urządzeniu (kopia zapasowa: Ustawienia → Eksportuj / Importuj)
 
